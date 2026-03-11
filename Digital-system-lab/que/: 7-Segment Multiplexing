@@ -1,0 +1,14 @@
+#Question: Display different hex values on the 4 digits of the Basys 3.
+-- Inside your main architecture
+process(refresh_clk) -- A slow clock around 1kHz
+begin
+    if rising_edge(refresh_clk) then
+        count <= count + 1; -- 2-bit counter
+        case count is
+            when "00" => an <= "1110"; seg <= seg_data0; -- Digit 0
+            when "01" => an <= "1101"; seg <= seg_data1; -- Digit 1
+            when "10" => an <= "1011"; seg <= seg_data2; -- Digit 2
+            when "11" => an <= "0111"; seg <= seg_data3; -- Digit 3
+        end case;
+    end if;
+end process;
