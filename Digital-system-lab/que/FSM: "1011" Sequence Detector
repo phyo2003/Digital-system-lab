@@ -1,0 +1,26 @@
+#Question: Detect the bit sequence 1011 on a single input. Light LED0 when found.
+
+
+architecture Behavioral of detector_1011 is
+    type state_type is (ST_RESET, S1, S10, S101, S1011);
+    signal curr, nxt : state_type;
+begin
+    -- Process 1: State Register
+    process(clk, rst) begin
+        if rst = '1' then curr <= ST_RESET;
+        elsif rising_edge(clk) then curr <= nxt; end if;
+    end process;
+
+    -- Process 2: Next State Logic
+    process(curr, din) begin
+        case curr is
+            when ST_RESET => if din = '1' then nxt <= S1; else nxt <= ST_RESET; end if;
+            when S1    => if din = '0' then nxt <= S10; else nxt <= S1; end if;
+            when S10   => if din = '1' then nxt <= S101; else nxt <= ST_RESET; end if;
+            when S101  => if din = '1' then nxt <= S1011; else nxt <= S10; end if;
+            when S1011 => if din = '1' then nxt <= S1; else nxt <= S10; end if;
+        end case;
+    end process;
+    
+    dout <= '1' when curr = S1011 else '0'; -- Output
+end Behavioral;
