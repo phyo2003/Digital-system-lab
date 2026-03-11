@@ -1,0 +1,24 @@
+#Question: Build a 4-to-1 MUX by connecting three 2-to-1 MUX components.-- First, define the 2-to-1 MUX Component
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+entity mux2to1 is
+    Port ( i0, i1, sel : in STD_LOGIC; y : out STD_LOGIC);
+end mux2to1;
+architecture Dataflow of mux2to1 is
+begin
+    y <= i0 when sel = '0' else i1;
+end Dataflow;
+
+-- Now, the Top Level Structural Design
+architecture Structural of mux4to1 is
+    component mux2to1
+        Port ( i0, i1, sel : in STD_LOGIC; y : out STD_LOGIC);
+    end component;
+    signal w1, w2 : STD_LOGIC; -- Internal wires
+begin
+    -- Two muxes for the first stage
+    M1: mux2to1 port map(i0=>A(0), i1=>A(1), sel=>S(0), y=>w1);
+    M2: mux2to1 port map(i0=>A(2), i1=>A(3), sel=>S(0), y=>w2);
+    -- Final mux for the output
+    M3: mux2to1 port map(i0=>w1, i1=>w2, sel=>S(1), y=>Y);
+end Structural;
