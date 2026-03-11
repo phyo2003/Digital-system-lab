@@ -1,0 +1,103 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity comp_3bit is
+    Port ( a : in  STD_LOGIC_VECTOR (2 downto 0); -- Input A (3 bits)
+           b : in  STD_LOGIC_VECTOR (2 downto 0); -- Input B (3 bits)
+           gt : out STD_LOGIC;                    -- A > B
+           lt : out STD_LOGIC;                    -- A < B
+           eq : out STD_LOGIC);                   -- A = B
+end comp_3bit;
+
+architecture Dataflow of comp_3bit is
+begin
+    -- Concurrent Assignments (Logic Gates)
+    gt <= '1' when (a > b) else '0';
+    lt <= '1' when (a < b) else '0';
+    eq <= '1' when (a = b) else '0';
+end Dataflow;
+
+
+
+architecture Structural of comp_3bit is
+    signal e2, e1, e0 : std_logic;
+begin
+    -- Bit-wise equality wires
+    e2 <= not (a(2) xor b(2));
+    e1 <= not (a(1) xor b(1));
+    e0 <= not (a(0) xor b(0));
+
+    -- Structural Output Logic
+    eq <= e2 and e1 and e0;
+    
+    gt <= (a(2) and not b(2)) or 
+          (e2 and a(1) and not b(1)) or 
+          (e2 and e1 and a(0) and not b(0));
+          
+    lt <= (not a(2) and b(2)) or 
+          (e2 and not a(1) and b(1)) or 
+          (e2 and e1 and not a(0) and b(0));
+end Structural;
+
+
+PortBasys 3 PinHardware Component a(2 downto 0)V17, V16, W16 SW0, SW1, SW2 ,    b(2 downto 0)W17, W15, V15  SW3, SW4, SW5, gtU16LED0,  ltE19LED1,  eq	U19	LED2
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity tb_comp_3bit is
+-- Testbench entity is always empty
+end tb_comp_3bit;
+
+architecture Behavioral of tb_comp_3bit is
+
+    -- 1. Component Declaration for the Unit Under Test (UUT)
+    component comp_3bit
+        Port ( a : in  STD_LOGIC_VECTOR (2 downto 0);
+               b : in  STD_LOGIC_VECTOR (2 downto 0);
+               gt : out STD_LOGIC;
+               lt : out STD_LOGIC;
+               eq : out STD_LOGIC);
+    end component;
+
+    -- 2. Signal Declarations (to connect to the UUT)
+    signal a_tb  : STD_LOGIC_VECTOR(2 downto 0) := "000";
+    signal b_tb  : STD_LOGIC_VECTOR(2 downto 0) := "000";
+    signal gt_tb : STD_LOGIC;
+    signal lt_tb : STD_LOGIC;
+    signal eq_tb : STD_LOGIC;
+
+begin
+
+    -- 3. Instantiate the UUT (Unit Under Test)
+    uut: comp_3bit port map (
+          a => a_tb,
+          b => b_tb,
+          gt => gt_tb,
+          lt => lt_tb,
+          eq => eq_tb
+        );
+
+    -- 4. Stimulus Process
+    stim_proc: process
+    begin		
+        -- Test Case 1: Equality (000 vs 000)
+        a_tb <= "000"; b_tb <= "000";
+        wait for 100 ns; -- Observe eq_tb = '1'
+
+        -- Test Case 2: A > B (111 vs 011)
+        a_tb <= "111"; b_tb <= "011";
+        wait for 100 ns; -- Observe gt_tb = '1'
+
+        -- Test Case 3: A < B (010 vs 100)
+        a_tb <= "010"; b_tb <= "100";
+        wait for 100 ns; -- Observe lt_tb = '1'
+
+        -- Test Case 4: Boundary Case (110 vs 111)
+        a_tb <= "110"; b_tb <= "111";
+        wait for 100 ns; -- Observe lt_tb = '1'
+
+        wait; -- Stops the simulation
+    end process;
+
+end Behavioral;
