@@ -1,0 +1,92 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity counter_sseg_top is
+    Port ( clk       : in  STD_LOGIC;
+           reset     : in  STD_LOGIC;
+           sseg_sel  : in  STD_LOGIC_VECTOR(3 downto 0);
+           Q         : out STD_LOGIC_VECTOR(2 downto 0);
+           sseg_led  : out STD_LOGIC_VECTOR(6 downto 0);
+           sseg_en   : out STD_LOGIC_VECTOR(3 downto 0));
+end counter_sseg_top;
+
+architecture Behavioral of counter_sseg_top is
+
+    signal slow_clk : STD_LOGIC;
+    signal q0, q1, q2 : STD_LOGIC;
+    signal q_vec : STD_LOGIC_VECTOR(2 downto 0);
+    signal bin_out : STD_LOGIC_VECTOR(3 downto 0);
+    signal q0q1_and : STD_LOGIC;
+   
+
+begin
+
+    ------------------------------------------------
+    -- Clock Divider
+    ------------------------------------------------
+    clk_inst : entity work.clk_div
+        port map(
+            clk     => clk,
+            reset   => reset,
+            clk_out => slow_clk
+        );
+
+    ------------------------------------------------
+    -- 3-bit Synchronous Counter (JK FFs)
+    ------------------------------------------------
+
+    -- LSB
+    FF0 : entity work.JK
+        port map(
+            J     => '1',
+            K     => '1',
+            clk   => slow_clk,
+            reset => reset,
+            Q     => q0
+        );
+
+    -- Middle bit
+    FF1 : entity work.JK
+        port map(
+            J     => q0,
+            K     => q0,
+            clk   => slow_clk,
+            reset => reset,
+            Q     => q1
+        );
+
+    -- MSB
+-- MSB
+   -- MSB
+    FF2 : entity work.JK
+         port map(
+             J     => q0q1_and,
+             K     => q0q1_and,
+             clk   => slow_clk,
+              reset => reset,
+             Q     => q2
+         );
+
+
+
+    ------------------------------------------------
+    -- Internal vector
+    ------------------------------------------------
+    q_vec <= q2 & q1 & q0;
+    Q <= q_vec;
+
+    -- Extend to 4 bits for 7-segment
+    bin_out <= '0' & q_vec;
+    q0q1_and <= q0 and q1;
+    ------------------------------------------------
+    -- 7 Segment Decoder
+    ------------------------------------------------
+    sseg_inst : entity work.sseg_decoder
+        port map(
+            bin      => bin_out,
+            sseg_sel => sseg_sel,
+            sseg     => sseg_led,
+            sseg_en  => sseg_en
+        );
+
+end Behavioral;
