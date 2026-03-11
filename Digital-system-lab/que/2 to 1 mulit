@@ -1,0 +1,32 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity mux2to1_dataflow is
+    Port ( input0 : in  STD_LOGIC;
+           input1 : in  STD_LOGIC;
+           sel    : in  STD_LOGIC;
+           y      : out STD_LOGIC);
+end mux2to1_dataflow;
+
+architecture Dataflow of mux2to1_dataflow is
+begin
+    -- Single concurrent signal assignment
+    y <= input0 when sel = '0' else input1;
+end Dataflow;
+
+
+## Switches
+# input0 mapped to SW0
+set_property PACKAGE_PIN V17 [get_ports {input0}]					
+	set_property IOSTANDARD LVCMOS33 [get_ports {input0}]
+# input1 mapped to SW1
+set_property PACKAGE_PIN V16 [get_ports {input1}]					
+	set_property IOSTANDARD LVCMOS33 [get_ports {input1}]
+# sel mapped to SW15 (far left switch)
+set_property PACKAGE_PIN R2 [get_ports {sel}]					
+	set_property IOSTANDARD LVCMOS33 [get_ports {sel}]
+
+## LEDs
+# y (output) mapped to LED0
+set_property PACKAGE_PIN U16 [get_ports {y}]					
+	set_property IOSTANDARD LVCMOS33 [get_ports {y}]
