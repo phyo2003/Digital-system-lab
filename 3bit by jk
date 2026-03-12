@@ -1,0 +1,108 @@
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+
+ENTITY jk_ff IS
+    PORT (
+        clk   : IN STD_LOGIC;
+        j, k  : IN STD_LOGIC;
+        reset : IN STD_LOGIC; -- Synchronous reset input
+        q     : OUT STD_LOGIC;
+        q_bar : OUT STD_LOGIC
+    );
+END ENTITY jk_ff;
+
+ARCHITECTURE behavioral OF jk_ff IS
+    SIGNAL state : STD_LOGIC := '0';
+BEGIN
+    PROCESS (clk)
+    BEGIN
+        IF rising_edge(clk) THEN
+            IF reset = '1' THEN
+                state <= '0';
+            ELSIF j = '0' AND k = '0' THEN
+                state <= state;          -- Hold state
+            ELSIF j = '0' AND k = '1' THEN
+                state <= '0';            -- Reset
+            ELSIF j = '1' AND k = '0' THEN
+                state <= '1';            -- Set
+            ELSIF j = '1' AND k = '1' THEN
+                state <= NOT state;      -- Toggle
+            END IF;
+        END IF;
+    END PROCESS;
+
+    q <= state;
+    q_bar <= NOT state;
+END ARCHITECTURE behavioral;
+
+
+LIBRARY IEEE;
+USE IEEE.STD_LOGIC_1164.ALL;
+
+ENTITY sync_counter_3bit IS
+    PORT (
+        clk, reset : IN STD_LOGIC;
+        count_out  : OUT STD_LOGIC_VECTOR (2 DOWNTO 0) -- MSB is count_out(2)
+    );
+END ENTITY sync_counter_3bit;
+
+ARCHITECTURE structural OF sync_counter_3bit IS
+    -- Component declaration for the JK flip-flop
+    COMPONENT jk_ff
+        PORT (
+            clk   : IN STD_LOGIC;
+            j, k  : IN STD_LOGIC;
+            reset : IN STD_LOGIC;
+            q     : OUT STD_LOGIC;
+            q_bar : OUT STD_LOGIC
+        );
+    END COMPONENT jk_ff;
+
+    -- Internal signals to connect the flip-flops and logic gates
+    SIGNAL q_a, q_bar_a : STD_LOGIC;
+    SIGNAL q_b, q_bar_b : STD_LOGIC;
+    SIGNAL q_c, q_bar_c : STD_LOGIC;
+    SIGNAL j_b, k_b_sig : STD_LOGIC;
+    SIGNAL j_c, k_c_sig : STD_LOGIC;
+
+BEGIN
+    -- Combinational logic for JK inputs
+    j_b <= q_a;
+    k_b_sig <= q_a;
+    j_c <= q_a AND q_b;
+    k_c_sig <= q_a AND q_b;
+
+    -- Instantiate the three JK flip-flops
+    FF0: jk_ff PORT MAP (
+        clk => clk,
+        j => '1', -- JA = 1
+        k => '1', -- KA = 1
+        reset => reset,
+        q => q_a,
+        q_bar => q_bar_a
+    );
+
+    FF1: jk_ff PORT MAP (
+        clk => clk,
+        j => j_b,
+        k => k_b_sig,
+        reset => reset,
+        q => q_b,
+        q_bar => q_bar_b
+    );
+
+    FF2: jk_ff PORT MAP (
+        clk => clk,
+        j => j_c,
+        k => k_c_sig,
+        reset => reset,
+        q => q_c,
+        q_bar => q_bar_c
+    );
+
+    -- Map the internal signals to the output port
+    count_out(2) <= q_c; -- MSB
+    count_out(1) <= q_b;
+    count_out(0) <= q_a; -- LSB
+
+END ARCHITECTURE structural;
