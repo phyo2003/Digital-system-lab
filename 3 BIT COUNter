@@ -1,0 +1,71 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL; -- Use numeric_std for arithmetic operations
+
+entity sync_counter_3bit is
+    Port (
+        clk   : in STD_LOGIC;
+        rst   : in STD_LOGIC; -- Asynchronous reset
+        count : out STD_LOGIC_VECTOR (2 downto 0) -- 3-bit output (0 to 7)
+    );
+end entity sync_counter_3bit;
+
+architecture Behavioral of sync_counter_3bit is
+    signal count_signal : unsigned (2 downto 0) := "000"; -- Internal signal for counting
+begin
+    process (clk, rst)
+    begin
+        if rst = '1' then -- Asynchronous reset is active high
+            count_signal <= "000";
+        elsif rising_edge(clk) then -- Synchronous logic on the rising edge of the clock
+            -- Increment the counter. It wraps around from 111 (7) to 000 (0) automatically.
+            count_signal <= count_signal + 1;
+        end if;
+    end process;
+    
+    count <= std_logic_vector(count_signal); -- Assign the internal signal to the output port
+end architecture Behavioral;
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+entity counter_3bit_structural is
+    Port ( 
+        clk, reset : in STD_LOGIC;
+        q : out STD_LOGIC_VECTOR (2 downto 0)
+    );
+end counter_3bit_structural;
+
+architecture structural of counter_3bit_structural is
+    -- Component declaration for the D flip-flop
+    component d_ff is
+        Port ( 
+            d, clk, reset : in STD_LOGIC;
+            q : out STD_LOGIC
+        );
+    end component;
+
+    -- Internal signals to connect flip-flop outputs back to inputs
+    signal q_int : STD_LOGIC_VECTOR (2 downto 0);
+    -- Signals for the D inputs of the flip-flops
+    signal d0, d1, d2 : STD_LOGIC;
+
+begin
+
+    -- Assign the internal signal to the output port
+    q <= q_int;
+
+    -- Combinational logic for the D inputs
+    -- d0 drives the first FF (LSB)
+    d0 <= not q_int(0); 
+    -- d1 drives the second FF
+    d1 <= q_int(1) xor q_int(0);
+    -- d2 drives the third FF (MSB)
+    d2 <= q_int(2) xor (q_int(1) and q_int(0));
+
+    -- Component instantiations (mapping ports)
+    FF0: d_ff port map(d => d0, clk => clk, reset => reset, q => q_int(0));
+    FF1: d_ff port map(d => d1, clk => clk, reset => reset, q => q_int(1));
+    FF2: d_ff port map(d => d2, clk => clk, reset => reset, q => q_int(2));
+
+end structural;
